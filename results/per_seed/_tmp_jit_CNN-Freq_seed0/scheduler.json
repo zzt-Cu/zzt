@@ -1,0 +1,7 @@
+{
+ "name": "stepwise",
+ "warmup_epochs": 1,
+ "step": 1,
+ "step_value": 0.1,
+ "lambda_max": 0.5
+}

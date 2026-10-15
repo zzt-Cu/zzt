@@ -1,0 +1,42 @@
+# 依赖清单（版本取自论文实验实际使用的环境）
+#
+# 注意：RTX 5060（Blackwell, sm_120）需要 cu128 轮子且 torch>=2.7，
+#       否则 torch.cuda.is_available() 为 True 但算子会报
+#       "no kernel image is available"。
+#
+# fault_diagnosis_pinn 依赖清单
+# 版本号取自本机实测可用的运行环境（2026-09-22 核对）
+#
+# ---------------------------------------------------------------
+# 主力运行环境（训练 / 实验 / 画图）
+#   Python 3.10.11  +  torch 2.12.0.dev20260408+cu128 (RTX 5060 Laptop, sm_120, CUDA 12.8)
+#   本机实际路径（复用既有 cu128 隔离环境，只读使用，不往里装包）：
+#   如需在本机重建一个等价环境：
+#     python -m venv venv
+#     venv\Scripts\python -m pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu128
+#     venv\Scripts\python -m pip install -r requirements.txt
+#   注：RTX 5060 是 Blackwell(sm_120)，必须 cu128 且 torch>=2.7，否则
+#       torch.cuda.is_available() 为 True 但算子会报 "no kernel image is available"。
+# ---------------------------------------------------------------
+# 核心（训练/实验必需）
+--extra-index-url https://download.pytorch.org/whl/nightly/cu128
+torch==2.12.0.dev20260408+cu128 ; sys_platform == "win32"
+torch==2.12.0                    ; sys_platform != "win32"
+numpy==2.2.6
+scipy==1.15.3
+scikit-learn==1.7.2
+pandas==2.3.3
+matplotlib==3.10.9
+seaborn==0.13.2
+PyYAML==6.0.3
+tqdm==4.70.1
+h5py==3.16.0
+
+# 测试
+pytest==9.1.1
+
+# ---------------------------------------------------------------
+# 部署链（onnx / tflite）—— 使用独立环境，避免污染训练环境
+#   见 code/deployment/README_deploy_env.md
+#   onnx / onnxruntime / tensorflow 不在此处强制安装
+# ---------------------------------------------------------------

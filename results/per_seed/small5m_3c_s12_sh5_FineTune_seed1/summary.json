@@ -1,0 +1,13 @@
+{
+ "method": "FineTune",
+ "seed": 1,
+ "best_val_f1": 0.6514806149524346,
+ "best_val_acc": 0.6748148341973622,
+ "best_epoch": 79,
+ "n_params": 45667,
+ "train_time_s": 31.93929886817932,
+ "epoch_time_s": 0.3992412358522415,
+ "peak_gpu_mem_mb": 93.249024,
+ "flops_m": 4.252032,
+ "cfg_hash": "ff1f684976aa"
+}

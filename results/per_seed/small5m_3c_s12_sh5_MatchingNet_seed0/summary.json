@@ -1,0 +1,13 @@
+{
+ "method": "MatchingNet",
+ "seed": 0,
+ "best_val_f1": 0.4084370059098574,
+ "best_val_acc": 0.414814821879069,
+ "best_epoch": 19,
+ "n_params": 45667,
+ "train_time_s": 35.181381940841675,
+ "epoch_time_s": 0.4397672742605209,
+ "peak_gpu_mem_mb": 99.618304,
+ "flops_m": 4.252032,
+ "cfg_hash": "ff1f684976aa"
+}

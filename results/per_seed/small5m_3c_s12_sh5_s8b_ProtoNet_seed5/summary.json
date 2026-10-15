@@ -1,0 +1,13 @@
+{
+ "method": "ProtoNet",
+ "seed": 5,
+ "best_val_f1": 0.5995153334967209,
+ "best_val_acc": 0.6095555767416954,
+ "best_epoch": 59,
+ "n_params": 45667,
+ "train_time_s": 89.42544746398926,
+ "epoch_time_s": 1.1178180932998658,
+ "peak_gpu_mem_mb": 99.618304,
+ "flops_m": 4.252032,
+ "cfg_hash": "d8f8cf531119"
+}

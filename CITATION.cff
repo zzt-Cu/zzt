@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "Fault-Characteristic-Order Soft Constraints for Few-Shot Bearing Fault Diagnosis"
+abstract: >-
+  Order-domain soft-constraint loss for few-shot bearing fault diagnosis, with a
+  tachometer-free rotation-frequency estimator, a four-arm comparison of speed-prior
+  sources, and an empirical characterisation of the method's validity boundary.
+type: software
+authors:
+  - family-names: "zzt"
+    given-names: ""
+    affiliation: "Beijing Technology and Business University"
+license: MIT
+repository-code: "https://github.com/zzt-Cu/zzt.git"
+doi: "TBD"
+keywords:
+  - fault diagnosis
+  - few-shot learning
+  - rolling bearing
+  - fault characteristic order
+  - physics-informed machine learning

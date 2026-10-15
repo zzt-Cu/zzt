@@ -1,0 +1,13 @@
+{
+ "method": "CNN-CE",
+ "seed": 1,
+ "best_val_f1": 0.5189838583801776,
+ "best_val_acc": 0.5325000277161598,
+ "best_epoch": 39,
+ "n_params": 45732,
+ "train_time_s": 31.392781257629395,
+ "epoch_time_s": 0.39240976572036745,
+ "peak_gpu_mem_mb": 102.373376,
+ "flops_m": 4.25216,
+ "cfg_hash": "1f9eba98d261"
+}

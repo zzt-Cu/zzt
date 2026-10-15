@@ -1,0 +1,2 @@
+﻿method,seed,n_params,flops_m,best_epoch,best_val_f1,best_val_acc,train_time_s,epoch_time_s,peak_gpu_mem_mb,cfg_hash,in_acc,in_acc_std,in_f1,in_f1_std,in_win_acc,in_win_f1,in_freq_consistency,x1_acc,x1_f1,x1_freq_consistency,x2_acc,x2_f1,x2_freq_consistency,x3_acc,x3_f1,x3_freq_consistency,total_time_s,run_id
+CNN-Freq,0,45667,4.25203,9,0.526713,0.537556,3.97045,0.397045,93.249,4eb118335388,0.526733,0.0715293,0.520267,0.0719745,0.522727,0.519357,0.275582,0.448889,0.442307,0.26957,0.449333,0.446982,0.312439,0.443167,0.443375,0.218332,25.6466,timing_freq_CNN-Freq_seed0

@@ -1,0 +1,13 @@
+{
+ "method": "CNN-Freq",
+ "seed": 8,
+ "best_val_f1": 0.5639879771501463,
+ "best_val_acc": 0.5877777993679046,
+ "best_epoch": 59,
+ "n_params": 45667,
+ "train_time_s": 62.68317198753357,
+ "epoch_time_s": 0.7835396498441696,
+ "peak_gpu_mem_mb": 93.249024,
+ "flops_m": 4.252032,
+ "cfg_hash": "5342b83ae824"
+}

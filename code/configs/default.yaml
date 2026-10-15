@@ -1,0 +1,165 @@
+# fault_diagnosis_pinn 默认配置
+# 所有可复现性所需超参集中在此文件
+
+project: fault_diagnosis_pinn
+seed: 42
+device: auto            # auto | cpu | cuda
+
+# ------------------------------------------------------------------
+# 数据
+# ------------------------------------------------------------------
+data:
+  # 路径统一以**项目根 fault_diagnosis_pinn/** 为基准
+  raw_dir: data/raw
+  processed_dir: data/processed
+  fs: 12000                       # CWRU 12kHz 驱动端采样率
+  # ⚠️ 类别集合是**标签空间的定义**：标签 = 本列表下标。
+  #    改这里必须同时同步 fewshot.n_way 与 model.n_way（否则分类头维度与标签错位）。
+  #    运行 evaluate.py 时可用 --classes 覆盖，脚本会自动同步三处，
+  #    并让窗口池缓存按类别集合重新取指纹（见 cwru_loader.cache_path）。
+  classes: [NC, IR007, OR007, B007]
+  # label_map 仅为文档性质，运行时一律由 classes 顺序重算，不要手改这两个中的一个
+  label_map: {NC: 0, IR007: 1, OR007: 2, B007: 3}
+  # 类别 -> {载荷 hp: CWRU 官方文件编号}
+  file_codes:
+    NC:    {0: 97,  1: 98,  2: 99,  3: 100}
+    IR007: {0: 105, 1: 106, 2: 107, 3: 108}
+    B007:  {0: 118, 1: 119, 2: 120, 3: 121}
+    OR007: {0: 130, 1: 131, 2: 132, 3: 133}    # OR007@6 中心位置
+  window: 2048                    # 每样本点数
+  stride_train: 512               # 训练窗重叠，扩充样本量
+  stride_eval: 512                # 评估窗步长（75% 重叠）。
+                                  # ⚠️ 泄漏边界：train/val/test 按时间块**互斥**切分
+                                  # （cwru_loader.split_blocks），所以跨划分绝无重叠；
+                                  # 池内重叠会让同一段信号的多个窗进入同一 episode，
+                                  # 使 episode 级 CI 偏乐观 ⇒ 已在 6.9 局限性中如实说明，
+                                  # 并额外提供"整段留出集窗口级"评估作为对照。
+  max_windows_per_file: 400       # 逐文件等间隔截断上限，抑制"正常类记录长 => 类别失衡"
+                                  # （CWRU 正常基线远长于故障记录，不截断可差 4 倍）
+  balance_pools: true             # 池内类别均衡（等间隔下采样到各类最小窗口数）。
+                                  # 未均衡时正常类占 53%，均衡后消除该混淆项。
+  norm: zscore                    # 每条窗口独立零均值/单位方差（不跨样本，无泄漏）
+  train_loads: [0]                # 主实验：0hp 训练
+  test_loads: [0]                 # 同工况测试
+  cross_loads: [1, 2, 3]          # 跨工况测试 0hp -> 1/2/3hp
+
+# ------------------------------------------------------------------
+# Few-shot episode 协议（文档要求 support=20, query=60）
+# ------------------------------------------------------------------
+fewshot:
+  n_way: 4
+  n_shot: 5                       # 4-way 5-shot
+  n_query_per_class: 15           # 4 x 15 = 60 query
+  # support = 4 x 5 = 20, query = 4 x 15 = 60
+
+# ------------------------------------------------------------------
+# 训练
+# ------------------------------------------------------------------
+train:
+  episodes_per_epoch: 100
+  epochs: 200
+  optimizer: AdamW
+  lr: 0.0002
+  weight_decay: 0.01
+  scheduler: cosine
+  cosine_eta_min: 0.0
+  val_episodes: 100               # 每个 epoch 后在 val 上评估，用于选优
+  val_every: 10                   # 每 10 个 epoch 评估一次（固定种子，epoch 间可比）
+  grad_clip: 5.0
+
+# ------------------------------------------------------------------
+# 损失
+# ------------------------------------------------------------------
+loss:
+  ce_weight: 1.0
+  lambda_strategy: stepwise       # stepwise | fixed | adaptive
+  # stepwise: 前 warmup_epochs 轮 lambda=0，之后每 step 轮 +step_value，上限 lambda_max
+  warmup_epochs: 20
+  step: 10
+  step_value: 0.1
+  lambda_max: 0.5
+  fixed_lambda: 0.3               # lambda_strategy=fixed 时使用
+  n_harmonics: 3                  # h in {1,2,3}
+  eps: 1.0e-8
+  nc_penalty_zero: true           # NC 类别无特征频率，偏差项置零
+  # ---- 随机频率对照（消融实验）----
+  # freq_jitter > 0 时，每个类别的基频被乘 U(1-j, 1+j) 后重建谐波表：
+  # 约束强度/形式/超参/λ 调度全不变，只破坏频率的**物理正确性**。
+  # 用途：若"随机频率"也拿到与真实频率同等的提升，则增益只是"多一项损失=正则化"，
+  #       与物理无关 —— 这是审稿人一定会问的竞争解释，必须有对照。
+  # 注意：jitter 在 FrequencySoftConstraintLoss._set_tables 内部应用，
+  #       故 set_rpm()（跨工况评估会调）不会把它撤销。
+  freq_jitter: 0.0                # 0 = 使用真实理论特征频率
+  jitter_seed: 0                  # 固定 seed ⇒ 各转速共用同一张随机频率表
+  # ---- 转速自适应（论文升级项：故障特征**阶次**软约束）----
+  # 阶次 O_c = f_theory(c)/f_r 与载荷无关；阶次域与 Hz 域在同一 f_r 下**代数等价**
+  # （见 code/_probe_order_domain.py 第 0 节），故升级的实质是 **f_r 从哪里来**：
+  #   fixed    —— 用标称转速（旧做法，等价于"现场装了转速表"）；
+  #   estimate —— 每个 episode 由 query 谱峰在 rpm_window 内自估 f_r（免转速表）；
+  #   jitter   —— 训练期对 f_r 做 ±speed_jitter_rpm 随机化（对加载引起的转速漂移鲁棒）。
+  speed_mode: fixed
+  speed_jitter_rpm: 0.0           # speed_mode=jitter 时的随机半宽 (rpm)
+  rpm_window: [1500, 2100]        # speed_mode=estimate 的物理可行窗口（弱先验，仅防 f_r→0 退化）
+  speed_grid: 121                 # 自估搜索网格点数
+
+# ------------------------------------------------------------------
+# 包络谱 / 频率
+# ------------------------------------------------------------------
+freq:
+  band: [500, 5000]               # Butterworth 带通 (Hz)
+  filter_order: 4
+  n_peaks: 5                      # 峰值数量 K
+  peak_min_sep_hz: 10.0           # 峰值最小间隔，避免同一峰被重复计入
+  shaft_rpm: {0: 1797, 1: 1772, 2: 1750, 3: 1730}   # CWRU 各载荷近似转速
+
+# ------------------------------------------------------------------
+# 模型（1D-CNN，参数量必须 < 50K）
+# ------------------------------------------------------------------
+model:
+  name: bearing_cnn
+  in_channels: 1
+  channels: [16, 32, 64, 96]      # 4 层卷积
+  kernels: [15, 7, 5, 3]
+  strides: [2, 2, 2, 2]
+  pools: [2, 2, 2, 2]
+  fc_hidden: 64                   # FC1 宽度 = embedding 维度
+                                  # 参数量核算：conv 32704 + BN 416 + FC1(192*64+64)=12352
+                                  #            + FC2(64*4+4)=260  =>  45,732 (< 50,000)
+  dropout: 0.1
+  n_way: 4
+  max_params: 50000
+  pool_mode: gap_gmp              # 全局平均 ‖ 全局最大 拼接（对稀疏冲击更敏感，零参数代价）
+
+# ------------------------------------------------------------------
+# 评估
+# ------------------------------------------------------------------
+eval:
+  test_episodes: 1000
+  repeats: 5                      # 5 次独立运行，报告均值 ± 95% CI
+  ci: 0.95
+  methods: [CNN-CE, ProtoNet, MatchingNet, FineTune, CNN-Freq]
+
+# ------------------------------------------------------------------
+# 部署
+# ------------------------------------------------------------------
+deploy:
+  onnx_opset: 13
+  quantize: int8
+  esp32:
+    chip: ESP32-S3
+    clock_mhz: 240
+    sram_kb: 512
+    psram_kb: 8192
+    # 无实物：下列为估算口径，论文中必须标注 [估算/待实测]
+    measured: false
+
+# ------------------------------------------------------------------
+# 输出路径
+# ------------------------------------------------------------------
+paths:
+  # 全部以项目根 fault_diagnosis_pinn/ 为基准
+  results_figures: results/figures
+  results_tables: results/tables
+  results_logs: results/logs
+  paper_sections: paper/sections
+  checkpoints: results/checkpoints

@@ -1,0 +1,5 @@
+﻿scope,metric,n_seeds,mean_CNN-Freq,mean_CNN-CE,delta,t,p_seed,df,p_episode,n_episode_pairs
+in-domain(0hp),in_acc,0,0.713333,0.700222,,,,0,0.0012511,100
+cross 1hp,x1_acc,0,0.598889,0.598333,,,,0,,
+cross 2hp,x2_acc,0,0.598333,0.585389,,,,0,,
+cross 3hp,x3_acc,0,0.560278,0.550889,,,,0,,

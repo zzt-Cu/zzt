@@ -1,0 +1,2 @@
+﻿method,seed,n_params,flops_m,best_epoch,best_val_f1,best_val_acc,train_time_s,epoch_time_s,peak_gpu_mem_mb,cfg_hash,in_acc,in_acc_std,in_f1,in_f1_std,in_win_acc,in_win_f1,in_freq_consistency,x1_acc,x1_f1,x1_freq_consistency,x2_acc,x2_f1,x2_freq_consistency,x3_acc,x3_f1,x3_freq_consistency,total_time_s,run_id
+CNN-CE,0,45732,4.25216,199,1,1,83.5307,0.417654,102.373,7ef11764651e,1,0,1,0,1,1,0.738222,1,1,0.716667,1,1,0.721444,1,1,0.766556,95.4546,smoke_check_20261011_CNN-CE_seed0
